@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Registration and Dashboard</title>
+</head>
+<body>
+  <h1>User Registration</h1>
+
+  <form id="registration-form">
+    <label for="name">Name:</label>
+    <input type="text" id="name" required>
+    <br><br>
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" required>
+    <br><br>
+
+    <label for="course">Course:</label>
+    <input type="text" id="course" required>
+    <br><br>
+
+    <button type="submit">Register</button>
+  </form>
+
+  <h2>Program Messages</h2>
+  <ol id="messages" aria-live="polite"></ol>
+
+  <script type="module">
+    const form = document.getElementById("registration-form");
+    const messages = document.getElementById("messages");
+    var registrationCount = 0;
+
+    const showMessage = (message) => {
+      const listItem = document.createElement("li");
+      listItem.textContent = message;
+      messages.appendChild(listItem);
+    };
+
+    const createUser = (name = "Guest", email = "guest@example.com", ...extraDetails) => {
+      const basicDetails = { name, email };
+      const statusKey = "status";
+
+      return {
+        ...basicDetails,
+        extraDetails,
+        [statusKey]: "Registered",
+        getSummary() {
+          return `${this.name} has been registered.`;
+        }
+      };
+    };
+
+    const saveUser = (user, callback = showMessage) => {
+      callback("Saving user...");
+
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          callback("User saved.");
+          resolve(user);
+        }, 1000);
+      });
+    };
+
+    const loadDashboard = async (user, callback) => {
+      callback("Loading dashboard...");
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1000);
+      });
+
+      const { name, email } = user;
+      callback(`Dashboard loaded for ${name} (${email}).`);
+    };
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      messages.innerHTML = "";
+
+      showMessage("Synchronous: registration started.");
+      registrationCount = registrationCount + 1;
+
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const course = document.getElementById("course").value.trim();
+      let user = createUser(name, email, course);
+
+      showMessage(user.getSummary());
+      showMessage(`Registration number: ${registrationCount}`);
+      showMessage("Asynchronous: waiting for the user to be saved...");
+
+      user = await saveUser(user);
+      const { name: savedName, email: savedEmail, status } = user;
+      const [savedCourse] = user.extraDetails;
+      showMessage(`Saved: ${savedName}, ${savedEmail}, ${savedCourse} (${status}).`);
+
+      await loadDashboard(user, showMessage);
+    });
+  </script>
+</body>
+</html>
